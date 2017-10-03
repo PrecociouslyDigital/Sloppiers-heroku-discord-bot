@@ -3,11 +3,36 @@ var app = express()
 var Discord = require("discord.js");
 var ver ="0.86"
 var mybot = new Discord.Client();
-var getJSON = require('get-JSON');
+var getJSON = require('get-json');
+
+var redisClient = require('redis').createClient(process.env.REDIS_URL);
+
+var settings = {
+    assume_existing_users_are_good : true,
+}
+
+var util = {
+    keyFromParts : function(){
+        return [...arguments].join(":");
+    },
+    whitelistMessage : ["aren't asshats", "are all good blokes", "are fine", "are not replicants"],
+}
 
 mybot.on("ready", function () {
-	console.log("Ready to begin! Serving in " + mybot.channels.length + " channels");
+	console.log("Ready to begin! Serving in " + mybot.guilds.size + " guilds");
+	console.log(mybot.guilds.values());
+	for(let guild of mybot.guilds.values()){
+	    console.log("Processing " + guild.name);
+	    redisClient.sadd(util.keyFromParts(guild.id, "whitelist"), guild.members.map((member) => member.id));
+	    console.log("Assuming " + 
+	        guild.members
+	            .map((member)=>member.displayName)
+	            .join("\n") +
+	        util.whitelistMessage[Math.floor(Math.random() * util.whitelistMessage.length)]);
+	}
+	
 });
+
 
 mybot.on("message", function(message) {
     if (message.content === "!live") {
@@ -21,76 +46,6 @@ mybot.on("message", function(message) {
         });
     }
 });
-//long comands 
-mybot.on("message", function(message){
-
-            if( message.content === "!my_avatar" ){
-
-        var usersAvatar = message.sender.avatarURL;
-
-        if(usersAvatar){
-            // user has an avatar
-
-            mybot.reply(message, "your avatar can be found at " + usersAvatar);
-
-        }else{
-            // user doesn't have an avatar
-
-            mybot.reply(message, "you don't have an avatar!");
-        }
-
-            }
-
-} );
-
-
-
-//bot stuff 
-mybot.on("message", function(message) {
-    if(message.content === "!help") {
-        mybot.reply(message, "**My current Commands** ```!about_bot, !live, !my_avatar, !twitch, !youtube, hype, cry```" );
-    }
-
-});
-
-mybot.on("message", function(message) {
-    if(message.content === "!about_bot") {
-        mybot.reply(message, "I was made by SloppierKitty7. I was written in nodejs and i'm runing on heroku and soon will be on github. I'm current on version is: " + ver + " @SloppierKitty7 should really update me");
-		mybot.sendFile(message, "http://i.imgur.com/izUfF1f.png");
-
-    }
-});
-
-//links
-
-mybot.on("message", function(message) {
-    if(message.content === "!twitch") {
-        mybot.reply(message, "https://www.twitch.tv/lalicel");
-    }
-});
-
-mybot.on("message", function(message) {
-    if(message.content === "!youtube") {
-        mybot.reply(message, "https://www.youtube.com/channel/UCVsd_WSEaW5oJTRZTI-2yBQ");
-    }
-});
-
-//emots
-
-mybot.on("message", function(message) {
-    if(message.content === "hype") {
-        mybot.sendFile(message, "http://i.imgur.com/zDPIzq4.png");
-    }
-});
-mybot.on("message", function(message) {
-    if(message.content === "cry") {
-        mybot.sendFile(message, "http://i.imgur.com/izUfF1f.png");
-    }
-});
-
-
-
-
 
 
 
@@ -99,9 +54,21 @@ app.set('port', (process.env.PORT || 5000))
 app.use(express.static(__dirname + '/public'))
 
 app.get('/', function(request, response) {
-  response.send('Hello World!')
+  mybot.generateInvite(['ADMINISTRATOR'])
+    .then(link => {
+        console.log(`Generated bot invite link: ${link}`);
+        response.send(`<html><body>Generated bot invite link: <a href="${link}">${link}</a></body></html>`);
+    });
+
 })
 
 app.listen(app.get('port'), function() {
   console.log("Node app is running at localhost:" + app.get('port'))
 })
+
+mybot.login(process.env.DISCORD_TOKEN).then(function(){
+    console.log("Logged in!");
+},function(err){
+    console.log("Porblem!");
+    console.log(err);
+});
