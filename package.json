@@ -1,10 +1,14 @@
 {
+<<<<<<< HEAD
   "version": "0.0.1",
+=======
+  "version": "0.1.0",
+>>>>>>> dev
   "description": "Discord Rate limiting bot",
   "repository": "https://github.com/PrecociouslyDigital/discord-rate-limiter",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node-ts index.ts"
   },
   "dependencies": {
     "@types/express": "^4.0.37",
