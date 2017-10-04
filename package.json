@@ -1,9 +1,5 @@
 {
-<<<<<<< HEAD
-  "version": "0.0.1",
-=======
   "version": "0.1.0",
->>>>>>> dev
   "description": "Discord Rate limiting bot",
   "repository": "https://github.com/PrecociouslyDigital/discord-rate-limiter",
   "main": "index.js",
